@@ -1,20 +1,17 @@
 package tasks
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/google/uuid"
-)
-
-type Status int
-
-const (
-	incomplete Status = iota
-	completed  Status = 1
+	"github.com/labstack/echo/v4"
 )
 
 type Task struct {
 	// ID     string `json:"id"`
 	Name   string `json:"name"`
-	Status Status `json:"status"`
+	Status int    `json:"status"`
 }
 
 type TaskStore map[string]Task
@@ -23,39 +20,109 @@ func CreateTaskStore() TaskStore {
 	return map[string]Task{}
 }
 
-func (t *TaskStore) GetTasks() []Task {
+type GetTaskResponse struct {
+	Tasks []Task `json:"tasks"`
+}
+
+func (t TaskStore) GetTasks(c echo.Context) error {
 	tasks := []Task{}
 
-	for _, val := range *t {
+	for _, val := range t {
 		tasks = append(tasks, val)
 	}
 
-	return tasks
+	return c.JSON(http.StatusOK, GetTaskResponse{
+		Tasks: tasks,
+	})
 }
 
-func (t *TaskStore) SetTasks(data []Task) error {
-	for _, task := range data {
+type SetTasksInput struct {
+	Tasks []Task `json:"tasks"`
+}
+
+type SetTaskResponse struct {
+	IsSuccess bool     `json:"isSuccess"`
+	IDList    []string `json:"idList"`
+}
+
+func (t TaskStore) SetTasks(c echo.Context) error {
+	content := SetTasksInput{}
+	if err := c.Bind(&content); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid input")
+	}
+	if content.Tasks == nil {
+		return c.JSON(http.StatusBadRequest, "invalid input")
+	}
+	fmt.Printf("%v\n", content)
+	ids := []string{}
+	for _, task := range content.Tasks {
 		// create unique id
-		newUUID := uuid.New()
-		(*t)[newUUID.String()] = task
+		newUUID := uuid.New().String()
+		t[newUUID] = task
+		ids = append(ids, newUUID)
 	}
-	return nil
+	return c.JSON(http.StatusOK, SetTaskResponse{
+		IsSuccess: true,
+		IDList:    ids,
+	})
 }
 
-func (t *TaskStore) UpdateTasks(id string, task Task) error {
-	tasks := []Task{}
-
-	for _, val := range *t {
-		tasks = append(tasks, val)
-	}
-	return nil
+// how to validate all key exist?
+type UpdateTasksInput struct {
+	ID     string `param:"id"`
+	Name   string `json:"name,omitempty"`
+	Status int    `json:"status,omitempty"`
 }
 
-func (t *TaskStore) RemoveTasks(id string) error {
-	tasks := []Task{}
+type UpdateTaskResponse struct {
+	IsSuccess bool   `json:"isSuccess"`
+	ID        string `json:"id"`
+}
 
-	for _, val := range *t {
-		tasks = append(tasks, val)
+func (t TaskStore) UpdateTasks(c echo.Context) error {
+	content := UpdateTasksInput{}
+
+	if err := c.Bind(&content); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid input")
 	}
-	return nil
+	_, ok := t[content.ID]
+	// If the key exists
+	if !ok {
+		return c.JSON(http.StatusBadRequest, "Task not found.")
+	}
+
+	t[content.ID] = Task{
+		Name:   content.Name,
+		Status: content.Status,
+	}
+
+	return c.JSON(http.StatusOK, UpdateTaskResponse{
+		IsSuccess: true,
+		ID:        content.ID,
+	})
+}
+
+type RemoveTaskInput struct {
+	ID string `param:"id"`
+}
+
+type RemoveTasksResponse struct {
+	Name string `json:"name"`
+}
+
+func (t TaskStore) RemoveTasks(c echo.Context) error {
+	content := UpdateTasksInput{}
+
+	if err := c.Bind(&content); err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid input")
+	}
+	task, ok := t[content.ID]
+	// If the key exists
+	if !ok {
+		return c.JSON(http.StatusBadRequest, "Task not found.")
+	}
+	delete(t, content.ID)
+	return c.JSON(http.StatusOK, RemoveTasksResponse{
+		Name: task.Name,
+	})
 }
