@@ -25,8 +25,7 @@ type SetTasksInput struct {
 }
 
 type SetTaskResponse struct {
-	IsSuccess bool         `json:"isSuccess"`
-	Tasks     []TaskWithID `json:"tasks"`
+	Tasks []TaskWithID `json:"tasks"`
 }
 
 type UpdateTasksInput struct {
@@ -36,8 +35,7 @@ type UpdateTasksInput struct {
 }
 
 type UpdateTaskResponse struct {
-	IsSuccess bool       `json:"isSuccess"`
-	Task      TaskWithID `json:"task"`
+	Task TaskWithID `json:"task"`
 }
 
 type RemoveTaskInput struct {

@@ -26,7 +26,7 @@ func (s *Store) GetByID(id string) (*schema.TaskWithID, error) {
 	task, ok := s.Data[id]
 	// If the key exists
 	if !ok {
-		return nil, fmt.Errorf("Task not found.")
+		return nil, fmt.Errorf("task not found")
 	}
 
 	return &schema.TaskWithID{
@@ -61,9 +61,7 @@ func (s *Store) Create(param schema.SetTasksInput) ([]schema.TaskWithID, error) 
 	for _, task := range param.Tasks {
 		// create unique id
 		newUUID := uuid.New().String()
-		fmt.Printf("uuid %v", newUUID)
 		s.Data[newUUID] = task
-		fmt.Printf("uuid %v", newUUID)
 		tasks = append(tasks, schema.TaskWithID{
 			Name:   task.Name,
 			Status: task.Status,
@@ -81,7 +79,7 @@ func (s *Store) Update(param schema.UpdateTasksInput) (*schema.TaskWithID, error
 	_, ok := s.Data[param.ID]
 	// If the key exists
 	if !ok {
-		return nil, fmt.Errorf("Task not found.")
+		return nil, fmt.Errorf("task not found")
 	}
 
 	newTask := schema.Task{
@@ -105,7 +103,7 @@ func (s *Store) Remove(param schema.RemoveTaskInput) (string, error) {
 	value, ok := s.Data[param.ID]
 	// If the key exists
 	if !ok {
-		return "", fmt.Errorf("Task not found.")
+		return "", fmt.Errorf("task not found")
 	}
 	delete(s.Data, param.ID)
 	return value.Name, nil

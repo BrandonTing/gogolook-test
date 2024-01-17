@@ -36,8 +36,7 @@ func SetTasksHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, schema.SetTaskResponse{
-		IsSuccess: true,
-		Tasks:     tasks,
+		Tasks: tasks,
 	})
 }
 
@@ -55,14 +54,13 @@ func UpdateTasksHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, schema.UpdateTaskResponse{
-		IsSuccess: true,
-		Task:      *task,
+		Task: *task,
 	})
 }
 
 func RemoveTasksHandler(c echo.Context) error {
 	content := schema.RemoveTaskInput{}
-
+	fmt.Printf("%v", content)
 	if err := c.Bind(&content); err != nil {
 		return c.JSON(http.StatusBadRequest, schema.FailResponse{Message: "invalid input"})
 	}
