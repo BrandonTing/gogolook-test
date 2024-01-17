@@ -23,6 +23,4 @@
 **/.vscode
 **/.idea
 
-# .env file
-**/.env
 fly.toml
