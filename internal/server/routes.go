@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"gogolook-test/cmd/web"
+	"gogolook-test/internal/storage"
 	"gogolook-test/internal/tasks"
 
 	"github.com/a-h/templ"
@@ -23,11 +24,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.GET("/web", echo.WrapHandler(templ.Handler(web.HelloForm())))
 	e.POST("/hello", echo.WrapHandler(http.HandlerFunc(web.HelloWebHandler)))
 
-	taskStore := tasks.CreateTaskStore()
-	e.GET("/tasks", taskStore.GetTasks)
-	e.POST("/tasks", taskStore.SetTasks)
-	e.PUT("/tasks/:id", taskStore.UpdateTasks)
-	e.DELETE("/tasks/:id", taskStore.RemoveTasks)
+	storage.SetupStore()
+	e.GET("/tasks", tasks.GetTasksHandler)
+	e.POST("/tasks", tasks.SetTasksHandler)
+	e.PUT("/tasks/:id", tasks.UpdateTasksHandler)
+	e.DELETE("/tasks/:id", tasks.RemoveTasksHandler)
 
 	e.GET("/", s.HelloWorldHandler)
 
