@@ -19,6 +19,23 @@ func SetupStore() {
 	}
 }
 
+func (s *Store) GetByID(id string) (*schema.TaskWithID, error) {
+	if s == nil || s.Data == nil {
+		return nil, fmt.Errorf("store is not setup correctly")
+	}
+	task, ok := s.Data[id]
+	// If the key exists
+	if !ok {
+		return nil, fmt.Errorf("Task not found.")
+	}
+
+	return &schema.TaskWithID{
+		ID:     id,
+		Name:   task.Name,
+		Status: task.Status,
+	}, nil
+}
+
 func (s *Store) GetAll() ([]schema.TaskWithID, error) {
 	if s == nil || s.Data == nil {
 		return nil, fmt.Errorf("store is not setup correctly")
@@ -81,15 +98,15 @@ func (s *Store) Update(param schema.UpdateTasksInput) (*schema.TaskWithID, error
 	}, nil
 }
 
-func (s *Store) Remove(param schema.RemoveTaskInput) (*string, error) {
+func (s *Store) Remove(param schema.RemoveTaskInput) (string, error) {
 	if s == nil || s.Data == nil {
-		return nil, fmt.Errorf("store is not setup correctly")
+		return "", fmt.Errorf("store is not setup correctly")
 	}
 	value, ok := s.Data[param.ID]
 	// If the key exists
 	if !ok {
-		return nil, fmt.Errorf("Task not found.")
+		return "", fmt.Errorf("Task not found.")
 	}
 	delete(s.Data, param.ID)
-	return &value.Name, nil
+	return value.Name, nil
 }

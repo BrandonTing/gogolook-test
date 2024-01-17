@@ -34,6 +34,6 @@ func NewServer() *http.Server {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
-	fmt.Printf("server listening at %v", NewServer.port)
+	fmt.Printf("server listening at %v\n", NewServer.port)
 	return server
 }

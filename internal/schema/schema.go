@@ -12,6 +12,10 @@ type TaskWithID struct {
 	Status int    `json:"status"`
 }
 
+type FailResponse struct {
+	Message string `json:"message"`
+}
+
 type GetTaskResponse struct {
 	Tasks []TaskWithID `json:"tasks"`
 }
