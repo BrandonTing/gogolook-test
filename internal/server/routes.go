@@ -24,13 +24,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 	storage.SetupStore()
 
 	taskGroup := e.Group("/tasks")
-	taskGroup.GET("/", tasks.GetTasksHandler)
-	taskGroup.POST("/", tasks.SetTasksHandler)
+	taskGroup.GET("", tasks.GetTasksHandler)
+	taskGroup.POST("", tasks.SetTasksHandler)
 	taskGroup.PUT("/:id", tasks.UpdateTasksHandler)
 	taskGroup.DELETE("/:id", tasks.RemoveTasksHandler)
 
 	webGroup := e.Group("/web")
-	webGroup.GET("/", echo.WrapHandler(http.HandlerFunc(web.TasksHomeHandler)))
+	webGroup.GET("", echo.WrapHandler(http.HandlerFunc(web.TasksHomeHandler)))
 	webGroup.POST("/task/new", echo.WrapHandler(http.HandlerFunc(web.NewTaskHandler)))
 	webGroup.PUT("/task/status/update", echo.WrapHandler(http.HandlerFunc(web.UpdateTaskStatusHandler)))
 	webGroup.DELETE("/task/delete", echo.WrapHandler(http.HandlerFunc(web.DeleteTaskHandler)))
