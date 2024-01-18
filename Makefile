@@ -5,6 +5,9 @@ all: build
 
 generate: 
 	@templ generate
+	
+generate-watch: 
+	@templ generate -watch
 
 build:
 	@echo "Building..."

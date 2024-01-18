@@ -1,25 +1,26 @@
 # Project gogolook-test
 
+- Test Host: https://gogolook-test.fly.dev/
+- Web version built on HTMX: https://gogolook-test.fly.dev/web 
+
 implement a restful task API application, including the following endpoints: 
 
 | method | endpoint | param | response | description |
 | --- | --- | --- | --- | --- |
 | GET | tasks | - | `{tasks: Task[]}` | 取得目前所有task清單 |
-| POST | tasks | `{tasks: Task[]}` | `{isSuccess: boolean, idList: string[]}` | 批次新增task |
-| PUT | tasks/{id} | `{name: string, status: int}` | `{isSuccess: boolean, id: string}` | 編輯指定task |
-| DELETE | tasks/{id} | - | `{isSuccess: boolean, name: string}` | 移除指定task |
+| POST | tasks | `{tasks: Task[]}` | `{tasks: Task[]}` | 批次新增task |
+| PUT | tasks/{id} | `{name: string, status: int}` | `{task: Task}` | 編輯指定task |
+| DELETE | tasks/{id} | - | `{name: string}` | 移除指定task |
 
 *Task:
 ```
 {
+    id: "08c7200b-7638-4fe6-abd8-c352b4b1ee9f" // generated uuid
     name: "test",   // task name
     status: 0       // 0 represents an incomplete task, while 1 represents a completed task
 }
 ```
 
-## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
 ## MakeFile
 
@@ -61,4 +62,14 @@ make test
 clean up binary from the last build
 ```bash
 make clean
+```
+
+generate templ component
+```bash
+make generate
+```
+
+generate templ component - watch mode
+```bash
+make generate-watch
 ```
