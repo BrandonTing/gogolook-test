@@ -3,6 +3,9 @@
 # Build the application
 all: build
 
+generate: 
+	@templ generate
+
 build:
 	@echo "Building..."
 	@go build -o main cmd/api/main.go

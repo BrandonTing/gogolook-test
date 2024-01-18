@@ -1,0 +1,59 @@
+package web
+
+import "gogolook-test/internal/schema"
+import "fmt"
+
+templ TasksHome(tasks []schema.TaskWithID) {
+	@Base() {
+		@TasksForm()
+		<table id="tasks-container">
+			if len(tasks) != 0 {
+				@TasksTable(tasks)
+			}
+		</table>
+	}
+}
+templ TasksForm() {
+	<form hx-post="/web/task/new" method="POST" hx-target="#tasks-container">
+		<input id="name" name="name" type="text"/>
+		<button type="submit">Submit</button>
+	</form>
+}
+templ TasksTable(tasks []schema.TaskWithID) {
+	<thead >
+		<tr>
+			<th>Name</th>
+			<th>Status</th>
+			<th>Action</th>
+		</tr>
+	</thead>
+	<tbody>
+		for _, task := range tasks {
+			<tr id={fmt.Sprintf("row-%v", task.ID)}>
+				<td>{ task.Name }</td>
+				@TaskStatus(task.ID, task.Status)
+				<td>
+					<input name="id" id={fmt.Sprintf("id-%v", task.ID)} hidden value={task.ID} />
+					<button 
+						hx-put="/web/task/status/update"
+						hx-target={fmt.Sprintf("#status-%v", task.ID)} 
+						hx-swap="outerHTML"
+						hx-include={fmt.Sprintf("#id-%v", task.ID)}
+					>Update</button>
+					<button 
+						hx-delete={fmt.Sprintf("/web/task/delete?id=%v", task.ID)}
+						hx-target={fmt.Sprintf("#row-%v", task.ID)} 
+						hx-swap="delete"
+					>Delete</button>
+				</td>
+			</tr>
+		}
+	</tbody>
+}
+templ TaskStatus(id string, status int) {
+	if status == 0 {
+		<td id={fmt.Sprintf("status-%v", id)}>Incomplete</td>
+	} else {
+		<td id={fmt.Sprintf("status-%v", id)}>Done</td>
+	}
+}

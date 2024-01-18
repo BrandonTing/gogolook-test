@@ -7,19 +7,15 @@ import (
 	"testing"
 )
 
-func GetIntPointer(value int) *int {
-	return &value
-}
-
 func CreateTestTasks() []schema.Task {
 	return []schema.Task{
 		{
 			Name:   "test 1",
-			Status: GetIntPointer(0),
+			Status: schema.GetIntPointer(0),
 		},
 		{
 			Name:   "test 2",
-			Status: GetIntPointer(1),
+			Status: schema.GetIntPointer(1),
 		},
 	}
 }
@@ -101,7 +97,7 @@ func TestUpdate(t *testing.T) {
 	_, err := storage.TaskStore.Update(schema.UpdateTasksInput{
 		ID:     taskToUpdate.ID,
 		Name:   "new name",
-		Status: GetIntPointer(1),
+		Status: schema.GetIntPointer(1),
 	})
 	if err != nil {
 		t.Errorf("Failed to update task: %v", err)

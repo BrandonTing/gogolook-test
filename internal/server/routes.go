@@ -8,7 +8,6 @@ import (
 	"gogolook-test/internal/storage"
 	"gogolook-test/internal/tasks"
 
-	"github.com/a-h/templ"
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -22,15 +21,19 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.Validator = &schema.Validator{Validator: validator.New()}
 	fileServer := http.FileServer(http.FS(web.Files))
 	e.GET("/js/*", echo.WrapHandler(fileServer))
-
-	e.GET("/web", echo.WrapHandler(templ.Handler(web.HelloForm())))
-	e.POST("/hello", echo.WrapHandler(http.HandlerFunc(web.HelloWebHandler)))
-
 	storage.SetupStore()
-	e.GET("/tasks", tasks.GetTasksHandler)
-	e.POST("/tasks", tasks.SetTasksHandler)
-	e.PUT("/tasks/:id", tasks.UpdateTasksHandler)
-	e.DELETE("/tasks/:id", tasks.RemoveTasksHandler)
+
+	taskGroup := e.Group("/tasks")
+	taskGroup.GET("/", tasks.GetTasksHandler)
+	taskGroup.POST("/", tasks.SetTasksHandler)
+	taskGroup.PUT("/:id", tasks.UpdateTasksHandler)
+	taskGroup.DELETE("/:id", tasks.RemoveTasksHandler)
+
+	webGroup := e.Group("/web")
+	webGroup.GET("/", echo.WrapHandler(http.HandlerFunc(web.TasksHomeHandler)))
+	webGroup.POST("/task/new", echo.WrapHandler(http.HandlerFunc(web.NewTaskHandler)))
+	webGroup.PUT("/task/status/update", echo.WrapHandler(http.HandlerFunc(web.UpdateTaskStatusHandler)))
+	webGroup.DELETE("/task/delete", echo.WrapHandler(http.HandlerFunc(web.DeleteTaskHandler)))
 
 	e.GET("/", s.HelloWorldHandler)
 

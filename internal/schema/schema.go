@@ -4,6 +4,10 @@ import (
 	"github.com/go-playground/validator"
 )
 
+func GetIntPointer(value int) *int {
+	return &value
+}
+
 type Validator struct {
 	Validator *validator.Validate
 }
