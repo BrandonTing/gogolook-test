@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 )
 
@@ -52,10 +53,12 @@ func TestCreateHandler(t *testing.T) {
 	storage.SetupStore()
 
 	e := echo.New()
+	e.Validator = &schema.Validator{Validator: validator.New()}
+
 	expected := []schema.Task{
 		{
 			Name:   "test",
-			Status: 0,
+			Status: GetIntPointer(0),
 		},
 	}
 	paramsByte, _ := json.Marshal(schema.SetTasksInput{
@@ -94,13 +97,14 @@ func TestUpdateHandler(t *testing.T) {
 	storage.SetupStore()
 	storage.TaskStore.Data["test-id"] = schema.Task{
 		Name:   "test",
-		Status: 0,
+		Status: GetIntPointer(0),
 	}
 	e := echo.New()
+	e.Validator = &schema.Validator{Validator: validator.New()}
 
 	paramsByte, _ := json.Marshal(schema.Task{
 		Name:   "new name",
-		Status: 0,
+		Status: GetIntPointer(0),
 	})
 
 	req := httptest.NewRequest(http.MethodPut, "/tasks/test-id", bytes.NewBuffer(paramsByte))
@@ -144,7 +148,7 @@ func TestRemoveHandler(t *testing.T) {
 	storage.SetupStore()
 	storage.TaskStore.Data["test-id"] = schema.Task{
 		Name:   "test",
-		Status: 0,
+		Status: GetIntPointer(0),
 	}
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodDelete, "/tasks/test-id", nil)

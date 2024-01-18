@@ -7,15 +7,19 @@ import (
 	"testing"
 )
 
+func GetIntPointer(value int) *int {
+	return &value
+}
+
 func CreateTestTasks() []schema.Task {
 	return []schema.Task{
 		{
 			Name:   "test 1",
-			Status: 0,
+			Status: GetIntPointer(0),
 		},
 		{
 			Name:   "test 2",
-			Status: 1,
+			Status: GetIntPointer(1),
 		},
 	}
 }
@@ -39,11 +43,9 @@ func TestCreate(t *testing.T) {
 	newTasks := CreateTestTasks()
 	newTaskMap := map[string]int{}
 	for _, task := range newTasks {
-		newTaskMap[task.Name] = task.Status
+		newTaskMap[task.Name] = *task.Status
 	}
-	tasks, err := storage.TaskStore.Create(schema.SetTasksInput{
-		Tasks: newTasks,
-	})
+	tasks, err := storage.TaskStore.Create(newTasks)
 	if err != nil {
 		t.Errorf("Failed to execute Create method: %v", err)
 		return
@@ -74,9 +76,7 @@ func TestCreate(t *testing.T) {
 func TestGetByID(t *testing.T) {
 	storage.SetupStore()
 	newTasks := CreateTestTasks()
-	tasks, _ := storage.TaskStore.Create(schema.SetTasksInput{
-		Tasks: newTasks,
-	})
+	tasks, _ := storage.TaskStore.Create(newTasks)
 	taskToCheck := tasks[0]
 	actualTask, err := storage.TaskStore.GetByID(taskToCheck.ID)
 	if err != nil {
@@ -94,16 +94,14 @@ func TestUpdate(t *testing.T) {
 	newTasks := CreateTestTasks()
 	newTaskMap := map[string]int{}
 	for _, task := range newTasks {
-		newTaskMap[task.Name] = task.Status
+		newTaskMap[task.Name] = *task.Status
 	}
-	tasks, _ := storage.TaskStore.Create(schema.SetTasksInput{
-		Tasks: newTasks,
-	})
+	tasks, _ := storage.TaskStore.Create(newTasks)
 	taskToUpdate := tasks[0]
 	_, err := storage.TaskStore.Update(schema.UpdateTasksInput{
 		ID:     taskToUpdate.ID,
 		Name:   "new name",
-		Status: 1,
+		Status: GetIntPointer(1),
 	})
 	if err != nil {
 		t.Errorf("Failed to update task: %v", err)
@@ -122,11 +120,9 @@ func TestUpdate(t *testing.T) {
 func TestRemove(t *testing.T) {
 	storage.SetupStore()
 	newTasks := CreateTestTasks()
-	tasks, _ := storage.TaskStore.Create(schema.SetTasksInput{
-		Tasks: newTasks,
-	})
+	tasks, _ := storage.TaskStore.Create(newTasks)
 	taskToRemove := tasks[0]
-	name, err := storage.TaskStore.Remove(schema.RemoveTaskInput{ID: taskToRemove.ID})
+	name, err := storage.TaskStore.Remove(taskToRemove.ID)
 	if err != nil {
 		t.Errorf("Failed to remove task: %v", err)
 		return

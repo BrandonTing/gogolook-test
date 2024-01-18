@@ -32,7 +32,7 @@ func (s *Store) GetByID(id string) (*schema.TaskWithID, error) {
 	return &schema.TaskWithID{
 		ID:     id,
 		Name:   task.Name,
-		Status: task.Status,
+		Status: *task.Status,
 	}, nil
 }
 
@@ -46,30 +46,30 @@ func (s *Store) GetAll() ([]schema.TaskWithID, error) {
 		tasks = append(tasks, schema.TaskWithID{
 			ID:     key,
 			Name:   val.Name,
-			Status: val.Status,
+			Status: *val.Status,
 		})
 	}
 
 	return tasks, nil
 }
 
-func (s *Store) Create(param schema.SetTasksInput) ([]schema.TaskWithID, error) {
+func (s *Store) Create(tasks []schema.Task) ([]schema.TaskWithID, error) {
 	if s == nil || s.Data == nil {
 		return nil, fmt.Errorf("store is not setup correctly")
 	}
-	tasks := []schema.TaskWithID{}
-	for _, task := range param.Tasks {
+	taskWithIDs := []schema.TaskWithID{}
+	for _, task := range tasks {
 		// create unique id
 		newUUID := uuid.New().String()
 		s.Data[newUUID] = task
-		tasks = append(tasks, schema.TaskWithID{
+		taskWithIDs = append(taskWithIDs, schema.TaskWithID{
 			Name:   task.Name,
-			Status: task.Status,
+			Status: *task.Status,
 			ID:     newUUID,
 		})
 	}
 
-	return tasks, nil
+	return taskWithIDs, nil
 }
 
 func (s *Store) Update(param schema.UpdateTasksInput) (*schema.TaskWithID, error) {
@@ -92,19 +92,19 @@ func (s *Store) Update(param schema.UpdateTasksInput) (*schema.TaskWithID, error
 	return &schema.TaskWithID{
 		ID:     param.ID,
 		Name:   newTask.Name,
-		Status: newTask.Status,
+		Status: *newTask.Status,
 	}, nil
 }
 
-func (s *Store) Remove(param schema.RemoveTaskInput) (string, error) {
+func (s *Store) Remove(id string) (string, error) {
 	if s == nil || s.Data == nil {
 		return "", fmt.Errorf("store is not setup correctly")
 	}
-	value, ok := s.Data[param.ID]
+	value, ok := s.Data[id]
 	// If the key exists
 	if !ok {
 		return "", fmt.Errorf("task not found")
 	}
-	delete(s.Data, param.ID)
+	delete(s.Data, id)
 	return value.Name, nil
 }

@@ -4,10 +4,12 @@ import (
 	"net/http"
 
 	"gogolook-test/cmd/web"
+	"gogolook-test/internal/schema"
 	"gogolook-test/internal/storage"
 	"gogolook-test/internal/tasks"
 
 	"github.com/a-h/templ"
+	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -17,7 +19,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORS())
-
+	e.Validator = &schema.Validator{Validator: validator.New()}
 	fileServer := http.FileServer(http.FS(web.Files))
 	e.GET("/js/*", echo.WrapHandler(fileServer))
 
