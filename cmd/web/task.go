@@ -6,18 +6,6 @@ import (
 	"net/http"
 )
 
-func HelloWebHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	name := r.FormValue("name")
-	component := HelloPost(name)
-	component.Render(r.Context(), w)
-}
-
 func TasksHomeHandler(w http.ResponseWriter, r *http.Request) {
 	tasks, err := storage.TaskStore.GetAll()
 	if err != nil {
