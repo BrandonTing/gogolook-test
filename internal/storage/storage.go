@@ -19,6 +19,10 @@ func SetupStore() {
 	}
 }
 
+func init() {
+	SetupStore()
+}
+
 func (s *Store) GetByID(id string) (*schema.TaskWithID, error) {
 	if s == nil || s.Data == nil {
 		return nil, fmt.Errorf("store is not setup correctly")

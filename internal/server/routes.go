@@ -5,7 +5,6 @@ import (
 
 	"gogolook-test/cmd/web"
 	"gogolook-test/internal/schema"
-	"gogolook-test/internal/storage"
 	"gogolook-test/internal/tasks"
 
 	"github.com/go-playground/validator"
@@ -21,7 +20,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 	e.Validator = &schema.Validator{Validator: validator.New()}
 	fileServer := http.FileServer(http.FS(web.Files))
 	e.GET("/js/*", echo.WrapHandler(fileServer))
-	storage.SetupStore()
 
 	taskGroup := e.Group("/tasks")
 	taskGroup.GET("", tasks.GetTasksHandler)
