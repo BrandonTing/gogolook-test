@@ -28,7 +28,7 @@ func (s *Store[T]) GetByID(id string) (*ItemWithID[T], error) {
 	item, ok := s.Data[id]
 	// If the key exists
 	if !ok {
-		return nil, fmt.Errorf("task not found")
+		return nil, fmt.Errorf("item not found")
 	}
 
 	return &item, nil
@@ -38,13 +38,13 @@ func (s *Store[T]) GetAll() ([]ItemWithID[T], error) {
 	if s == nil || s.Data == nil {
 		return nil, fmt.Errorf("store is not setup correctly")
 	}
-	tasks := []ItemWithID[T]{}
+	data := []ItemWithID[T]{}
 
 	for _, val := range s.Data {
-		tasks = append(tasks, val)
+		data = append(data, val)
 	}
 
-	return tasks, nil
+	return data, nil
 }
 
 func (s *Store[T]) Create(newItems []T) ([]ItemWithID[T], error) {
@@ -73,17 +73,17 @@ func (s *Store[T]) Update(param ItemWithID[T]) (*ItemWithID[T], error) {
 	_, ok := s.Data[param.ID]
 	// If the key exists
 	if !ok {
-		return nil, fmt.Errorf("task not found")
+		return nil, fmt.Errorf("item not found")
 	}
 
-	newTask := ItemWithID[T]{
+	newItem := ItemWithID[T]{
 		Item: param.Item,
 		ID:   param.ID,
 	}
 
-	s.Data[param.ID] = newTask
+	s.Data[param.ID] = newItem
 
-	return &newTask, nil
+	return &newItem, nil
 }
 
 func (s *Store[T]) Remove(id string) (*ItemWithID[T], error) {
@@ -93,7 +93,7 @@ func (s *Store[T]) Remove(id string) (*ItemWithID[T], error) {
 	value, ok := s.Data[id]
 	// If the key exists
 	if !ok {
-		return nil, fmt.Errorf("task not found")
+		return nil, fmt.Errorf("item not found")
 	}
 	delete(s.Data, id)
 	return &value, nil
