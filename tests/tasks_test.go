@@ -16,7 +16,6 @@ import (
 )
 
 func TestGetHandler(t *testing.T) {
-	storage.SetupStore()
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/tasks", nil)
@@ -50,7 +49,6 @@ func TestGetHandler(t *testing.T) {
 }
 
 func TestCreateHandler(t *testing.T) {
-	storage.SetupStore()
 
 	e := echo.New()
 	e.Validator = &schema.Validator{Validator: validator.New()}
@@ -94,10 +92,13 @@ func TestCreateHandler(t *testing.T) {
 }
 
 func TestUpdateHandler(t *testing.T) {
-	storage.SetupStore()
-	storage.TaskStore.Data["test-id"] = schema.Task{
-		Name:   "test",
-		Status: schema.GetIntPointer(0),
+
+	tasks.TaskStore.Data["test-id"] = storage.ItemWithID[schema.Task]{
+		ID: "test-id",
+		Item: schema.Task{
+			Name:   "test",
+			Status: schema.GetIntPointer(0),
+		},
 	}
 	e := echo.New()
 	e.Validator = &schema.Validator{Validator: validator.New()}
@@ -114,7 +115,6 @@ func TestUpdateHandler(t *testing.T) {
 
 	c.SetParamNames("id")
 	c.SetParamValues("test-id")
-
 	if err := tasks.UpdateTasksHandler(c); err != nil {
 		t.Errorf("UpdateTasksHandler() error = %v", err)
 		return
@@ -145,10 +145,13 @@ func TestUpdateHandler(t *testing.T) {
 }
 
 func TestRemoveHandler(t *testing.T) {
-	storage.SetupStore()
-	storage.TaskStore.Data["test-id"] = schema.Task{
-		Name:   "test",
-		Status: schema.GetIntPointer(0),
+
+	tasks.TaskStore.Data["test-id"] = storage.ItemWithID[schema.Task]{
+		ID: "test-id",
+		Item: schema.Task{
+			Name:   "test",
+			Status: schema.GetIntPointer(0),
+		},
 	}
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodDelete, "/tasks/test-id", nil)

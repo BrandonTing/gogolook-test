@@ -2,81 +2,71 @@ package storage
 
 import (
 	"fmt"
-	"gogolook-test/internal/schema"
 
 	"github.com/google/uuid"
 )
 
-type Store struct {
-	Data map[string]schema.Task
+type ItemWithID[T any] struct {
+	Item T
+	ID   string
 }
 
-var TaskStore *Store
+type Store[T any] struct {
+	Data map[string]ItemWithID[T]
+}
 
-func SetupStore() {
-	TaskStore = &Store{
-		Data: map[string]schema.Task{},
+func SetupStore[T any]() *Store[T] {
+	return &Store[T]{
+		Data: map[string]ItemWithID[T]{},
 	}
 }
 
-func init() {
-	SetupStore()
-}
-
-func (s *Store) GetByID(id string) (*schema.TaskWithID, error) {
+func (s *Store[T]) GetByID(id string) (*ItemWithID[T], error) {
 	if s == nil || s.Data == nil {
 		return nil, fmt.Errorf("store is not setup correctly")
 	}
-	task, ok := s.Data[id]
+	item, ok := s.Data[id]
 	// If the key exists
 	if !ok {
 		return nil, fmt.Errorf("task not found")
 	}
 
-	return &schema.TaskWithID{
-		ID:     id,
-		Name:   task.Name,
-		Status: *task.Status,
-	}, nil
+	return &item, nil
 }
 
-func (s *Store) GetAll() ([]schema.TaskWithID, error) {
+func (s *Store[T]) GetAll() ([]ItemWithID[T], error) {
 	if s == nil || s.Data == nil {
 		return nil, fmt.Errorf("store is not setup correctly")
 	}
-	tasks := []schema.TaskWithID{}
+	tasks := []ItemWithID[T]{}
 
-	for key, val := range s.Data {
-		tasks = append(tasks, schema.TaskWithID{
-			ID:     key,
-			Name:   val.Name,
-			Status: *val.Status,
-		})
+	for _, val := range s.Data {
+		tasks = append(tasks, val)
 	}
 
 	return tasks, nil
 }
 
-func (s *Store) Create(tasks []schema.Task) ([]schema.TaskWithID, error) {
+func (s *Store[T]) Create(newItems []T) ([]ItemWithID[T], error) {
 	if s == nil || s.Data == nil {
 		return nil, fmt.Errorf("store is not setup correctly")
 	}
-	taskWithIDs := []schema.TaskWithID{}
-	for _, task := range tasks {
+	items := []ItemWithID[T]{}
+	for _, newItem := range newItems {
 		// create unique id
 		newUUID := uuid.New().String()
-		s.Data[newUUID] = task
-		taskWithIDs = append(taskWithIDs, schema.TaskWithID{
-			Name:   task.Name,
-			Status: *task.Status,
-			ID:     newUUID,
-		})
+		newItemWithID := ItemWithID[T]{
+			Item: newItem,
+			ID:   newUUID,
+		}
+		s.Data[newUUID] = newItemWithID
+		items = append(items, newItemWithID)
 	}
 
-	return taskWithIDs, nil
+	return items, nil
 }
 
-func (s *Store) Update(param schema.UpdateTasksInput) (*schema.TaskWithID, error) {
+func (s *Store[T]) Update(param ItemWithID[T]) (*ItemWithID[T], error) {
 	if s == nil || s.Data == nil {
 		return nil, fmt.Errorf("store is not setup correctly")
 	}
@@ -86,29 +76,25 @@ func (s *Store) Update(param schema.UpdateTasksInput) (*schema.TaskWithID, error
 		return nil, fmt.Errorf("task not found")
 	}
 
-	newTask := schema.Task{
-		Name:   param.Name,
-		Status: param.Status,
+	newTask := ItemWithID[T]{
+		Item: param.Item,
+		ID:   param.ID,
 	}
 
 	s.Data[param.ID] = newTask
 
-	return &schema.TaskWithID{
-		ID:     param.ID,
-		Name:   newTask.Name,
-		Status: *newTask.Status,
-	}, nil
+	return &newTask, nil
 }
 
-func (s *Store) Remove(id string) (string, error) {
+func (s *Store[T]) Remove(id string) (*ItemWithID[T], error) {
 	if s == nil || s.Data == nil {
-		return "", fmt.Errorf("store is not setup correctly")
+		return nil, fmt.Errorf("store is not setup correctly")
 	}
 	value, ok := s.Data[id]
 	// If the key exists
 	if !ok {
-		return "", fmt.Errorf("task not found")
+		return nil, fmt.Errorf("task not found")
 	}
 	delete(s.Data, id)
-	return value.Name, nil
+	return &value, nil
 }

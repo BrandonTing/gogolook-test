@@ -7,6 +7,12 @@ import (
 	"testing"
 )
 
+var TaskStore *storage.Store[schema.Task]
+
+func init() {
+	TaskStore = storage.SetupStore[schema.Task]()
+}
+
 func CreateTestTasks() []schema.Task {
 	return []schema.Task{
 		{
@@ -21,13 +27,12 @@ func CreateTestTasks() []schema.Task {
 }
 
 func TestGetAll(t *testing.T) {
-	storage.SetupStore()
-	tasks, err := storage.TaskStore.GetAll()
+	tasks, err := TaskStore.GetAll()
 	if err != nil {
 		t.Errorf("Failed to execute GetAll method: %v", err)
 		return
 	}
-	expected := []schema.TaskWithID{}
+	expected := []storage.ItemWithID[schema.Task]{}
 	if !reflect.DeepEqual(expected, tasks) {
 		t.Errorf("initial store should contain 0 item but get %v", tasks)
 		return
@@ -35,24 +40,23 @@ func TestGetAll(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-	storage.SetupStore()
 	newTasks := CreateTestTasks()
-	newTaskMap := map[string]int{}
+	newTaskMap := make(map[string]int)
 	for _, task := range newTasks {
 		newTaskMap[task.Name] = *task.Status
 	}
-	tasks, err := storage.TaskStore.Create(newTasks)
+	tasks, err := TaskStore.Create(newTasks)
 	if err != nil {
 		t.Errorf("Failed to execute Create method: %v", err)
 		return
 	}
 	// test if correctly created ID
 	for _, task := range tasks {
-		if _, ok := newTaskMap[task.Name]; !ok {
+		if _, ok := newTaskMap[task.Item.Name]; !ok {
 			t.Errorf("Failed to create target task: %v", err)
 			return
 		}
-		if task.Status != newTaskMap[task.Name] {
+		if *task.Item.Status != newTaskMap[task.Item.Name] {
 			t.Errorf("Failed to init task with correct status: %v", err)
 			return
 		}
@@ -62,7 +66,7 @@ func TestCreate(t *testing.T) {
 		}
 	}
 	// test get all after create
-	fetchedTasks, _ := storage.TaskStore.GetAll()
+	fetchedTasks, _ := TaskStore.GetAll()
 	if !reflect.DeepEqual(fetchedTasks, tasks) {
 		t.Errorf("Failed to get tasks just created: %v", err)
 		return
@@ -70,64 +74,63 @@ func TestCreate(t *testing.T) {
 }
 
 func TestGetByID(t *testing.T) {
-	storage.SetupStore()
 	newTasks := CreateTestTasks()
-	tasks, _ := storage.TaskStore.Create(newTasks)
+	tasks, _ := TaskStore.Create(newTasks)
 	taskToCheck := tasks[0]
-	actualTask, err := storage.TaskStore.GetByID(taskToCheck.ID)
+	actualTask, err := TaskStore.GetByID(taskToCheck.ID)
 	if err != nil {
 		t.Errorf("Failed to execute GetByID: %v", err)
 		return
 	}
-	if actualTask.Name != taskToCheck.Name || actualTask.Status != taskToCheck.Status {
+	if actualTask.Item.Name != taskToCheck.Item.Name || actualTask.Item.Status != taskToCheck.Item.Status {
 		t.Errorf("Failed to retrieve target task: %v", err)
 		return
 	}
 }
 
 func TestUpdate(t *testing.T) {
-	storage.SetupStore()
 	newTasks := CreateTestTasks()
 	newTaskMap := map[string]int{}
 	for _, task := range newTasks {
 		newTaskMap[task.Name] = *task.Status
 	}
-	tasks, _ := storage.TaskStore.Create(newTasks)
+	tasks, _ := TaskStore.Create(newTasks)
 	taskToUpdate := tasks[0]
-	_, err := storage.TaskStore.Update(schema.UpdateTasksInput{
-		ID:     taskToUpdate.ID,
-		Name:   "new name",
-		Status: schema.GetIntPointer(1),
+	_, err := TaskStore.Update(storage.ItemWithID[schema.Task]{
+		ID: taskToUpdate.ID,
+		Item: schema.Task{
+			Name:   "new name",
+			Status: schema.GetIntPointer(1),
+		},
 	})
 	if err != nil {
 		t.Errorf("Failed to update task: %v", err)
 		return
 	}
-	newTask, err := storage.TaskStore.GetByID(taskToUpdate.ID)
+	newTask, err := TaskStore.GetByID(taskToUpdate.ID)
 	if err != nil {
 		t.Errorf("Failed to get target task: %v", err)
 		return
 	}
-	if newTask.Name != "new name" || newTask.Status != 1 {
+	if newTask.Item.Name != "new name" || *newTask.Item.Status != 1 {
 		t.Errorf("Failed to update task correctly: %v", err)
 		return
 	}
 }
 func TestRemove(t *testing.T) {
-	storage.SetupStore()
 	newTasks := CreateTestTasks()
-	tasks, _ := storage.TaskStore.Create(newTasks)
+	tasks, _ := TaskStore.Create(newTasks)
 	taskToRemove := tasks[0]
-	name, err := storage.TaskStore.Remove(taskToRemove.ID)
+	removed, err := TaskStore.Remove(taskToRemove.ID)
 	if err != nil {
 		t.Errorf("Failed to remove task: %v", err)
 		return
 	}
-	if name != taskToRemove.Name {
-		t.Errorf("Failed to remove correct task: should be %v but deleted %v", taskToRemove.Name, name)
+	if removed.Item.Name != taskToRemove.Item.Name {
+		t.Errorf("Failed to remove correct task: should be %v but deleted %v", taskToRemove.Item.Name, removed.Item.Name)
 		return
 	}
-	if _, err := storage.TaskStore.GetByID(taskToRemove.ID); err == nil {
+	if _, err := TaskStore.GetByID(taskToRemove.ID); err == nil {
 		t.Errorf("Target task still exist: %v", err)
 		return
 	}

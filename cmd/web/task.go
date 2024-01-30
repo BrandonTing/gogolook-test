@@ -6,13 +6,35 @@ import (
 	"net/http"
 )
 
+var TaskStore *storage.Store[schema.Task]
+
+func init() {
+	TaskStore = storage.SetupStore[schema.Task]()
+}
+
+func fromDataToTask(data storage.ItemWithID[schema.Task]) schema.TaskWithID {
+	return schema.TaskWithID{
+		ID:     data.ID,
+		Name:   data.Item.Name,
+		Status: *data.Item.Status,
+	}
+}
+
+func fromDataListToTasks(data []storage.ItemWithID[schema.Task]) []schema.TaskWithID {
+	tasks := []schema.TaskWithID{}
+	for _, task := range data {
+		tasks = append(tasks, fromDataToTask(task))
+	}
+	return tasks
+}
+
 func TasksHomeHandler(w http.ResponseWriter, r *http.Request) {
-	tasks, err := storage.TaskStore.GetAll()
+	data, err := TaskStore.GetAll()
 	if err != nil {
 		http.Error(w, "Failed to render list", http.StatusInternalServerError)
 		return
 	}
-
+	tasks := fromDataListToTasks(data)
 	component := TasksHome(tasks)
 	component.Render(r.Context(), w)
 }
@@ -25,7 +47,7 @@ func NewTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	name := r.FormValue("name")
-	_, err = storage.TaskStore.Create([]schema.Task{
+	_, err = TaskStore.Create([]schema.Task{
 		{
 			Name:   name,
 			Status: schema.GetIntPointer(0),
@@ -35,11 +57,12 @@ func NewTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to create new task", http.StatusInternalServerError)
 		return
 	}
-	tasks, err := storage.TaskStore.GetAll()
+	data, err := TaskStore.GetAll()
 	if err != nil {
 		http.Error(w, "Failed to get current list", http.StatusInternalServerError)
 		return
 	}
+	tasks := fromDataListToTasks(data)
 	component := TasksTable(tasks)
 	component.Render(r.Context(), w)
 }
@@ -52,20 +75,22 @@ func UpdateTaskStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := r.FormValue("id")
-	task, err := storage.TaskStore.GetByID(id)
+	data, err := TaskStore.GetByID(id)
 	if err != nil {
 		http.Error(w, "Failed to get task", http.StatusNotFound)
 		return
 	}
-
+	task := fromDataToTask(*data)
 	newStatus := 0
 	if task.Status == 0 {
 		newStatus = 1
 	}
-	_, err = storage.TaskStore.Update(schema.UpdateTasksInput{
-		ID:     id,
-		Name:   task.Name,
-		Status: &newStatus,
+	_, err = TaskStore.Update(storage.ItemWithID[schema.Task]{
+		ID: id,
+		Item: schema.Task{
+			Name:   task.Name,
+			Status: &newStatus,
+		},
 	})
 	if err != nil {
 		http.Error(w, "Failed to update task status", http.StatusInternalServerError)
@@ -82,7 +107,7 @@ func DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
-	_, err := storage.TaskStore.Remove(id)
+	_, err := TaskStore.Remove(id)
 	if err != nil {
 		http.Error(w, "Failed to remove task", http.StatusInternalServerError)
 		return
